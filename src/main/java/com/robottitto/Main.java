@@ -4,6 +4,8 @@ import com.robottitto.model.Archive;
 import com.robottitto.model.Config;
 import com.robottitto.model.Directory;
 import com.robottitto.util.JsonUtils;
+import com.robottitto.util.NewFileChecker;
+import com.robottitto.util.NewFileListener;
 import com.robottitto.util.PostgreSQLUtils;
 
 import java.io.File;
@@ -17,17 +19,23 @@ import static com.robottitto.util.PostgreSQLUtils.*;
 public class Main {
 
     private static final String CONFIG_JSON = "config.json";
+    public static File appDirectory;
+    public static String root;
 
     public static void main(String[] args) throws IOException, SQLException {
         Config config = JsonUtils.readConfig(CONFIG_JSON);
         PostgreSQLUtils.connect(config.getDbConnection());
-        File appDirectory = new File(config.getApp().getDirectory());
-        String root = appDirectory.getParent() + appDirectory.getName();
+        appDirectory = new File(config.getApp().getDirectory());
+        root = appDirectory.getParent() + appDirectory.getName();
         syncAppDirectoryToDb(appDirectory, root);
         syncDbToAppDirectory(appDirectory, root);
+        NewFileListener newFileListener = new NewFileListener(PostgreSQLUtils.getConnection());
+        newFileListener.start();
+        NewFileChecker newFileChecker = new NewFileChecker(PostgreSQLUtils.getConnection());
+        newFileChecker.start();
     }
 
-    private static void syncAppDirectoryToDb(File resource, String root) throws SQLException, IOException {
+    public static void syncAppDirectoryToDb(File resource, String root) throws SQLException, IOException {
         String resourceName = resource.getPath().replace(root, ".");
         if (resource.isFile()) {
             String directoryName = resource.getParent().replace(root, ".");
@@ -35,11 +43,13 @@ public class Main {
             String fileName = resource.getName();
             if (!isArchiveInserted(fileName, directoryId, resource)) {
                 PostgreSQLUtils.insertArchive(fileName, directoryId, resource);
+                System.out.println("Engadiuse o arquivo " + fileName);
             }
         }
         if (resource.isDirectory()) {
             if (!isDirectoryInserted(resourceName)) {
                 PostgreSQLUtils.insertDirectory(resourceName);
+                System.out.println("Engadiuse o directorio " + resourceName);
             }
             for (File childFile : resource.listFiles()) {
                 syncAppDirectoryToDb(childFile, root);

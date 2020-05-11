@@ -46,6 +46,14 @@ public class PostgreSQLUtils {
         statement.close();
     }
 
+    public static Connection getConnection() {
+        return connection;
+    }
+
+    public static void setConnection(Connection connection) {
+        PostgreSQLUtils.connection = connection;
+    }
+
     public static ArrayList<Directory> getDirectories() throws SQLException {
         ArrayList<Directory> directories = new ArrayList<>();
         PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + TABLE_DIRECTORY);
@@ -153,6 +161,12 @@ public class PostgreSQLUtils {
             binaryFile = rs.getBytes("binaryFile");
         }
         return binaryFile;
+    }
+
+    public static void listen(String eventName) throws SQLException {
+        Statement statement = connection.createStatement();
+        statement.execute("LISTEN " + eventName);
+        statement.close();
     }
 
 }

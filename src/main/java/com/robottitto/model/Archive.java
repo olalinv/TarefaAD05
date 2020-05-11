@@ -7,6 +7,9 @@ public class Archive {
     private int directoryId;
     private byte[] binaryFile;
 
+    public Archive() {
+    }
+
     public Archive(int id, String name, int directoryId) {
         this.id = id;
         this.name = name;
