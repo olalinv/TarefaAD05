@@ -26,7 +26,7 @@ public class Main {
         Config config = JsonUtils.readConfig(CONFIG_JSON);
         PostgreSQLUtils.connect(config.getDbConnection());
         appDirectory = new File(config.getApp().getDirectory());
-        root = appDirectory.getParent() + appDirectory.getName();
+        root = appDirectory.getPath();
         syncAppDirectoryToDb(appDirectory, root);
         syncDbToAppDirectory(appDirectory, root);
         NewFileListener newFileListener = new NewFileListener(PostgreSQLUtils.getConnection());
